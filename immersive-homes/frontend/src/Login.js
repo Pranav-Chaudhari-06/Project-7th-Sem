@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from "react-router-dom";
 import './Login.css';
 
 export default function Login() {
@@ -17,7 +18,7 @@ export default function Login() {
           </div>
           <button type="submit" className="btn btn-custom w-100">Login</button>
           <div className="text-center my-5">
-            <a href="#signup" className="text-primary">Don't have an account? Sign up</a>
+            Don't have an account?<Link to="/register" className="text-primary"> Sign up</Link>
           </div>
         </form>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "react-router-dom";
 import './Registration.css';
 
 export default function Registration() {
@@ -13,7 +14,7 @@ export default function Registration() {
     };
 
     return (
-        <div className="container d-flex justify-content-center align-items-center vh-75 mt-5">
+        <div className="container d-flex justify-content-center align-items-center vh-25 mt-5">
             <div className="card p-4 shadow-lg" style={{ maxWidth: '500px', width: '100%' }}>
                 <h3 className="text-center mb-4">Register</h3>
                 <form>
@@ -84,6 +85,9 @@ export default function Registration() {
                             <button type="submit" className="btn btn-custom w-100 mb-3">Submit</button>
                         </div>
                     )}
+                    <div className="text-center my-3">
+                        Already have an account?<Link to="/login" className="text-primary"> Log in</Link>
+                    </div>
                 </form>
             </div>
         </div>
