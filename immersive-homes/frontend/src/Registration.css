@@ -1,0 +1,28 @@
+/* src/Registration.css */
+body {
+  background-color: #f8f9fa;
+}
+
+.card {
+  border-radius: 1rem;
+  border-color: #343a40; /* Dark color */
+}
+
+.btn.btn-custom {
+  background-color: black;
+  color: white;
+}
+.btn.btn-custom:hover{
+  background-color: white;
+  border-color: black;
+  color: black;
+}
+
+.text-primary {
+  color: #007bff !important;
+  text-decoration: none;
+}
+
+.text-primary:hover {
+  text-decoration: underline;
+}

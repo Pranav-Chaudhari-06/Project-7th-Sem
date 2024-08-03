@@ -1,0 +1,25 @@
+body {
+    background-color: #f8f9fa;
+  }
+  
+  .card {
+    border-radius: 20px;
+  }
+  
+  .btn.btn-custom {
+    background-color: black;
+    color: white;
+  }
+  .btn.btn-custom:hover{
+    background-color: white;
+    border-color: black;
+    color: black;
+  }
+  .text-primary {
+    color: #007bff !important;
+    text-decoration: none;
+  }
+  
+  .text-primary:hover {
+    text-decoration: none;
+  }
