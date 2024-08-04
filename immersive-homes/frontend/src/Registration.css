@@ -5,7 +5,7 @@ body {
 
 .card {
   border-radius: 1rem;
-  border-color: #343a40; /* Dark color */
+  /* border-color: #343a40; Dark color */
 }
 
 .btn.btn-custom {
