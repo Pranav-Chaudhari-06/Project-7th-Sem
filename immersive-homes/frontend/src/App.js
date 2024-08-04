@@ -12,6 +12,7 @@ import Registration from './Registration';
 import Home from './Home';
 import Upload from './Upload';
 import Explore from './Explore';
+import Otp from './Otp';
 
 function App() {
   return (
@@ -39,6 +40,10 @@ function App() {
           <Route
             path="/register"
             element={<Registration />}
+          />
+          <Route
+            path="/otp_verification"
+            element={<Otp />}
           />
           <Route
             path="*"
