@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './Login.css'; // Ensure you have this CSS file for consistent styling
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import './Login.css';
 
 export default function Otp() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const email = location.state?.email;
 
   const handleChange = (e, index) => {
     const newOtp = [...otp];
@@ -26,28 +30,30 @@ export default function Otp() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const otpString = otp.join('');
-    // Simulate a verification process
-    setTimeout(() => {
-      if (otpString === '123456') {
-        setMessage('OTP verified successfully!');
-      } else {
-        setMessage('Invalid OTP. Please try again.');
-      }
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/users/verify-otp', { email, otp: otpString });
+      console.log(res.data);
+      setMessage('OTP verified successfully!');
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      setMessage('Invalid OTP. Please try again.');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  // Inline styles for smaller input fields
   const inputStyle = {
-    width: '40px',   // Reduced width
-    height: '40px',  // Reduced height
+    width: '40px',
+    height: '40px',
     textAlign: 'center',
-    fontSize: '18px', // Adjusted font size
-    marginRight: '8px', // Reduced margin between inputs
+    fontSize: '18px',
+    marginRight: '8px',
     borderRadius: '5px',
   };
 
@@ -75,7 +81,7 @@ export default function Otp() {
           </div>
           <button
             type="submit"
-            className="btn btn-custom w-100"
+            className="btn btn-primary w-100"
             style={{ padding: '10px', fontSize: '16px' }}
             disabled={loading}
           >

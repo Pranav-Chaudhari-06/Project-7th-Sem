@@ -1,44 +1,69 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User');
-
+const nodemailer = require('nodemailer');
+const User = require('../models/User'); // Assuming you have a User model
 const router = express.Router();
 
-// Registration route
+// Endpoint to register a user and send OTP
 router.post('/register', async (req, res) => {
-    const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
+  try {
+    const user = new User(req.body);
+    const otp = generateOtp();
+    user.otp = otp; // Store OTP in user model temporarily
 
-    try {
-        // Check if user already exists
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
-        }
+    await user.save();
 
-        // Create new user
-        user = new User({
-            firstName,
-            lastName,
-            age,
-            gender,
-            phoneNumber,
-            email,
-            password,
-            role,
-        });
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
-
-        // Save user
-        await user.save();
-
-        res.status(201).json({ msg: 'User registered successfully' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
+    sendOtpEmail(user.email, otp);
+    res.status(201).send('User registered and OTP sent');
+  } catch (err) {
+    res.status(400).send(err);
+  }
 });
+
+// Endpoint to verify OTP and save user details
+router.post('/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (user && user.otp === otp) {
+      user.otp = undefined; // Clear OTP after verification
+      await user.save();
+      res.send('OTP verified and user registered');
+    } else {
+      res.status(400).send('Invalid OTP');
+    }
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function sendOtpEmail(email, otp) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: '21bmiit096@gmail.com',
+      pass: 'thgccrbktampmmjb'
+    }
+  });
+
+  const mailOptions = {
+    from: '21bmiit096@gmail.com',
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is ${otp}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+}
 
 module.exports = router;

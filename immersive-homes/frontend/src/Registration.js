@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import './Registration.css';
 import axios from 'axios';
 
@@ -16,6 +16,8 @@ export default function Registration() {
         confirmPassword: '',
         role: '',
     });
+
+    const navigate = useNavigate();
 
     const { firstName, lastName, age, gender, phoneNumber, email, password, confirmPassword, role } = formData;
 
@@ -34,7 +36,10 @@ export default function Registration() {
         try {
             const res = await axios.post('http://localhost:5000/api/users/register', formData);
             console.log(res.data);
-            alert('Registration successful!');
+            alert('Registration successful! An OTP has been sent to your email.');
+
+            // Redirect to OTP verification page
+            navigate('/otp_verification', { state: { email } });
         } catch (err) {
             console.error(err);
             alert('Registration failed. Please try again.');
