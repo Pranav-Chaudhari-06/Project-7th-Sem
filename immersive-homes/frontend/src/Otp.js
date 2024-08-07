@@ -13,18 +13,20 @@ export default function Otp() {
 
   const handleChange = (e, index) => {
     const newOtp = [...otp];
-    newOtp[index] = e.target.value;
-
-    // Move focus to the next input field
-    if (e.target.value.length === 1 && index < 5) {
-      document.getElementById(`otp-input-${index + 1}`).focus();
+    if (/^[0-9]$/.test(e.target.value)) {
+      newOtp[index] = e.target.value;
+      
+      if (e.target.value.length === 1 && index < 5) {
+        document.getElementById(`otp-input-${index + 1}`).focus();
+      }
+    } else {
+      newOtp[index] = '';
     }
 
     setOtp(newOtp);
   };
 
   const handleKeyDown = (e, index) => {
-    // Move focus to the previous input field
     if (e.key === 'Backspace' && index > 0 && otp[index] === '') {
       document.getElementById(`otp-input-${index - 1}`).focus();
     }
@@ -55,6 +57,7 @@ export default function Otp() {
     fontSize: '18px',
     marginRight: '8px',
     borderRadius: '5px',
+    border: '1px solid #ccc',
   };
 
   return (
@@ -81,7 +84,7 @@ export default function Otp() {
           </div>
           <button
             type="submit"
-            className="btn btn-primary w-100"
+            className="btn btn-custom w-100"
             style={{ padding: '10px', fontSize: '16px' }}
             disabled={loading}
           >

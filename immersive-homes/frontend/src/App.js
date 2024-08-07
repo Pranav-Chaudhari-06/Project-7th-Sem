@@ -13,6 +13,7 @@ import Home from './Home';
 import Upload from './Upload';
 import Explore from './Explore';
 import Otp from './Otp';
+import Profile from './Profile';
 
 function App() {
   return (
@@ -44,6 +45,10 @@ function App() {
           <Route
             path="/otp_verification"
             element={<Otp />}
+          />
+          <Route
+            path="/profile"
+            element={<Profile />}
           />
           <Route
             path="*"

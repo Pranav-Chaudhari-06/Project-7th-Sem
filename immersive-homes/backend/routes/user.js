@@ -1,39 +1,117 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const User = require('../models/User'); // Assuming you have a User model
+const User = require('../models/User');
 const router = express.Router();
 
-// Endpoint to register a user and send OTP
-router.post('/register', async (req, res) => {
+// Login endpoint
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const user = new User(req.body);
-    const otp = generateOtp();
-    user.otp = otp; // Store OTP in user model temporarily
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    }
 
-    await user.save();
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials' });
+    }
 
-    sendOtpEmail(user.email, otp);
-    res.status(201).send('User registered and OTP sent');
+    req.session.user = { id: user._id, firstName: user.firstName, email: user.email };
+    res.json({ success: true, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
   } catch (err) {
-    res.status(400).send(err);
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// Endpoint to verify OTP and save user details
+// Logout endpoint
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Failed to log out' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ success: true });
+  });
+});
+
+// Registration endpoint
+router.post('/register', async (req, res) => {
+  const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = new User({
+      firstName,
+      lastName,
+      age,
+      gender,
+      phoneNumber,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    // Generate and set OTP
+    const otp = generateOtp();
+    user.otp = otp;
+
+    await user.save();
+
+    // Send OTP
+    sendOtpEmail(user.email, otp);
+
+    // Respond with success message
+    return res.status(201).json({ message: 'User registered successfully. An OTP has been sent to your email.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// OTP verification endpoint
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
   try {
     const user = await User.findOne({ email });
 
     if (user && user.otp === otp) {
-      user.otp = undefined; // Clear OTP after verification
+      user.otp = '';
       await user.save();
-      res.send('OTP verified and user registered');
+
+      // Set up session and cookie
+      req.session.user = {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      };
+
+      res.json({ success: true, message: 'OTP verified and user registered' });
     } else {
-      res.status(400).send('Invalid OTP');
+      res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
   } catch (err) {
-    res.status(500).send(err);
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Fetch session data
+router.get('/session', (req, res) => {
+  if (req.session.user) {
+    res.json({ user: req.session.user });
+  } else {
+    res.json({ user: null });
   }
 });
 
@@ -46,15 +124,15 @@ function sendOtpEmail(email, otp) {
     service: 'gmail',
     auth: {
       user: '21bmiit096@gmail.com',
-      pass: 'thgccrbktampmmjb'
-    }
+      pass: 'thgccrbktampmmjb',
+    },
   });
 
   const mailOptions = {
     from: '21bmiit096@gmail.com',
     to: email,
     subject: 'Your OTP Code',
-    text: `Your OTP code is ${otp}`
+    text: `Your OTP code is ${otp}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {

@@ -1,0 +1,57 @@
+/* ProfilePage.css */
+
+.profile-container {
+    padding: 20px;
+  }
+  
+  .profile-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-picture {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  .profile-name {
+    font-size: 2rem;
+    margin: 0;
+  }
+  
+  .profile-username {
+    font-size: 1.2rem;
+    color: #6c757d;
+  }
+  
+  .profile-email,
+  .profile-phone {
+    margin: 10px 0;
+  }
+  
+  .profile-nav .nav-tabs {
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .profile-nav .nav-link {
+    color: #007bff;
+  }
+  
+  .profile-nav .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #ddd #ddd #fff;
+  }
+  
+  .profile-content {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .profile-section {
+    margin-bottom: 20px;
+  }
+  

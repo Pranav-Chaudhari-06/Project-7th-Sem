@@ -23,3 +23,8 @@ body {
   .text-primary:hover {
     text-decoration: none;
   }
+
+  /* Hide the dropdown arrow */
+.dropdown-toggle::after {
+  display: none;
+}
