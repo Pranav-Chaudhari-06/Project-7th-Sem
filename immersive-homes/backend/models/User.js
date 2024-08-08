@@ -9,7 +9,9 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, required: true },
-  otp: { type: String } // OTP field
+  otp: { type: String }, // OTP field,
+  resetPasswordToken: { type: String }, // Field to store the reset token
+  resetPasswordExpires: { type: Date }, // Field to store the expiration time of the reset token
 });
 
 module.exports = mongoose.model('User', UserSchema);

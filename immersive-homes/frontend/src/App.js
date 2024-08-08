@@ -14,6 +14,8 @@ import Upload from './Upload';
 import Explore from './Explore';
 import Otp from './Otp';
 import Profile from './Profile';
+import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
 
 function App() {
   return (
@@ -49,6 +51,14 @@ function App() {
           <Route
             path="/profile"
             element={<Profile />}
+          />
+           <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+          <Route 
+            path="/reset-password/:token" 
+            element={<ResetPassword />} 
           />
           <Route
             path="*"

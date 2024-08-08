@@ -36,7 +36,7 @@ export default function Login() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center vh-75 mt-5">
+    <div className="container d-flex justify-content-center align-items-center vh-75 mt-1">
       <div className="card p-4 shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
         <h3 className="text-center mb-4">Login</h3>
         <form onSubmit={handleSubmit}>
@@ -52,7 +52,7 @@ export default function Login() {
               required
             />
           </div>
-          <div className="form-group my-5">
+          <div className="form-group my-4">
             <label htmlFor="password" className="form-label text-lg">Password:</label>
             <input
               type="password"
@@ -63,6 +63,9 @@ export default function Login() {
               onChange={handlePasswordChange}
               required
             />
+          </div>
+          <div className="text-right mb-3">
+            <Link to="/forgot-password" className="text-primary">Forgot Password?</Link>
           </div>
           <button type="submit" className="btn btn-custom w-100" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
