@@ -1,59 +1,200 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Profile.css';
 
 export default function Profile() {
-  // Sample user data (replace with real data from your state or props)
-  const user = {
-    username: 'johndoe',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phoneNumber: '123-456-7890',
-    profilePicture: 'https://via.placeholder.com/150', // Replace with user's profile picture URL
+  const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    age: '',
+    gender: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    role: ''
+  });
+
+  useEffect(() => {
+    // Fetch user data when component mounts
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/users/session', { withCredentials: true });
+        setUser(response.data.user);
+        setEditForm({
+          firstName: response.data.user.firstName,
+          lastName: response.data.user.lastName,
+          age: response.data.user.age,
+          gender: response.data.user.gender,
+          phoneNumber: response.data.user.phoneNumber,
+          email: response.data.user.email,
+          password: response.data.user.password,
+          role: response.data.user.role
+        });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
   };
 
+  const handleInputChange = (e) => {
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSaveClick = async () => {
+    try {
+      await axios.put('http://localhost:5000/api/users/profile', editForm, { withCredentials: true });
+      setUser(editForm);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating user data:', error);
+    }
+  };
+
+  if (!user) {
+    return <div className="loading">Loading...</div>;
+  }
+
   return (
-    <div className="container profile-container">
-      <div className="row profile-header align-items-center">
-        <div className="col-md-3 text-center">
-          <img
-            src={user.profilePicture}
-            alt="Profile"
-            className="profile-picture img-fluid rounded-circle"
-          />
+    <div className="profile-page container-fluid">
+      <div className="row">
+        <div className="col-lg-3 col-md-4 sidebar">
+          <div className="card text-center">
+            <div className="card-body">
+              <img
+                src="https://via.placeholder.com/150"
+                alt="Profile"
+                className="img-fluid rounded-circle mb-3"
+              />
+              <h3>{user.firstName} {user.lastName}</h3>
+              <p><strong>Role:</strong> {user.role}</p>
+              <button className="btn btn-primary" onClick={handleEditClick}>
+                {isEditing ? "Cancel" : "Edit Profile"}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="col-md-9">
-          <h1 className="profile-name">{user.name}</h1>
-          <h4 className="profile-username">@{user.username}</h4>
-          <p className="profile-email">{user.email}</p>
-          <p className="profile-phone"><strong>Phone:</strong> {user.phoneNumber}</p>
-          <a href="#editProfile" className="btn btn-primary">Edit Profile</a>
+        <div className="col-lg-9 col-md-8 content">
+          <div className="card">
+            <div className="card-body">
+              {isEditing ? (
+                <>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label>First Name</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={editForm.firstName}
+                        onChange={handleInputChange}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label>Last Name</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={editForm.lastName}
+                        onChange={handleInputChange}
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label>Age</label>
+                      <input
+                        type="number"
+                        name="age"
+                        value={editForm.age}
+                        onChange={handleInputChange}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label>Gender</label>
+                      <select
+                        name="gender"
+                        value={editForm.gender}
+                        onChange={handleInputChange}
+                        className="form-control"
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input
+                      type="text"
+                      name="phoneNumber"
+                      value={editForm.phoneNumber}
+                      onChange={handleInputChange}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={editForm.email}
+                      onChange={handleInputChange}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={editForm.password}
+                      onChange={handleInputChange}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Role</label>
+                    <input
+                      type="text"
+                      name="role"
+                      value={editForm.role}
+                      onChange={handleInputChange}
+                      className="form-control"
+                    />
+                  </div>
+                  <button className="btn btn-success" onClick={handleSaveClick}>
+                    Save Changes
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h5>Profile Details</h5>
+                  <p><strong>First Name:</strong> {user.firstName}</p>
+                  <p><strong>Last Name:</strong> {user.lastName}</p>
+                  <p><strong>Age:</strong> {user.age}</p>
+                  <p><strong>Gender:</strong> {user.gender}</p>
+                  <p><strong>Phone Number:</strong> {user.phoneNumber}</p>
+                  <p><strong>Email:</strong> {user.email}</p>
+                  <p><strong>Password:</strong> {user.password}</p>
+                  <p><strong>Role:</strong> {user.role}</p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="profile-nav mt-4">
-        <ul className="nav nav-tabs">
-          <li className="nav-item">
-            <a className="nav-link active" href="#orders">Orders</a>
-          </li>
-          <li className="nav-item">
-            <a className="nav-link" href="#wishlist">Wishlist</a>
-          </li>
-          <li className="nav-item">
-            <a className="nav-link" href="#addresses">Addresses</a>
-          </li>
-          <li className="nav-item">
-            <a className="nav-link" href="#payment">Payment Methods</a>
-          </li>
-          <li className="nav-item">
-            <a className="nav-link" href="#settings">Account Settings</a>
-          </li>
-        </ul>
-      </div>
-      <div className="profile-content mt-4">
-        <div id="orders" className="profile-section">Orders content</div>
-        <div id="wishlist" className="profile-section">Wishlist content</div>
-        <div id="addresses" className="profile-section">Addresses content</div>
-        <div id="payment" className="profile-section">Payment Methods content</div>
-        <div id="settings" className="profile-section">Account Settings content</div>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    req.session.user = { id: user._id, firstName: user.firstName, email: user.email };
+    req.session.user = { id: user._id, firstName: user.firstName, lastName: user.lastName, age: user.age, gender: user.gender, phoneNumber: user.phoneNumber , email: user.email, password: user.password, role: user.role };
     res.json({ success: true, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
   } catch (err) {
     console.error(err);
@@ -202,6 +202,30 @@ router.post('/verify-otp', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+
+// Endpoint to update user profile
+router.put('/profile', async (req, res) => {
+  const { firstName, lastName, email, phoneNumber } = req.body;
+  try {
+    const userId = req.session.user.id;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+      firstName,
+      lastName,
+      email,
+      phoneNumber
+    }, { new: true });
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 
 // Fetch session data
 router.get('/session', (req, res) => {

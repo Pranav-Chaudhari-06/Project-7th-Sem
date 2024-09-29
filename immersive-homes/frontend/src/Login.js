@@ -36,7 +36,7 @@ export default function Login() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center vh-75 mt-1">
+    <div className="container d-flex justify-content-center align-items-center vh-75 mt-5">
       <div className="card p-4 shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
         <h3 className="text-center mb-4">Login</h3>
         <form onSubmit={handleSubmit}>
