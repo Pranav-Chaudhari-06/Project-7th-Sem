@@ -5,6 +5,35 @@ const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const router = express.Router();
 
+// Encryption and Decryption functions
+const algorithm = 'aes-256-cbc';
+const encryptionKey = crypto.randomBytes(32); // Store this key securely, such as in an environment variable
+const iv = crypto.randomBytes(16);
+
+function encrypt(text) {
+  const cipher = crypto.createCipheriv(algorithm, Buffer.from(encryptionKey), iv);
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return {
+    iv: iv.toString('hex'),
+    encryptedData: encrypted.toString('hex')
+  };
+}
+
+
+function decrypt(encryptedText, iv) {
+  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(encryptionKey), Buffer.from(iv, 'hex'));
+  let decrypted = decipher.update(Buffer.from(encryptedText, 'hex'));
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
+
+
+
+
+
+
+
 // Login endpoint
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -14,18 +43,33 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    // Decrypt the stored password
+    const decryptedPassword = decrypt(user.password, user.iv);
+
+    if (password !== decryptedPassword) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    req.session.user = { id: user._id, firstName: user.firstName, lastName: user.lastName, age: user.age, gender: user.gender, phoneNumber: user.phoneNumber , email: user.email, password: user.password, role: user.role };
+    // Set session data
+    req.session.user = {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      age: user.age,
+      gender: user.gender,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      password: decryptedPassword, // Store decrypted password in session
+      role: user.role
+    };
+
     res.json({ success: true, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 
 
@@ -44,7 +88,7 @@ router.post('/forgot-password', async (req, res) => {
     // Update the user with the reset token and its expiration
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = resetTokenExpires;
-    await user.save();
+    await user.save();  
 
     // Send the reset link via email
     const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
@@ -143,9 +187,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Encrypt the password
+    const { encryptedData, iv } = encrypt(password);
 
     const user = new User({
       firstName,
@@ -154,8 +197,9 @@ router.post('/register', async (req, res) => {
       gender,
       phoneNumber,
       email,
-      password: hashedPassword,
-      role,
+      password: encryptedData, // Store the encrypted password
+      iv: iv,  // Store the initialization vector (iv)
+      role
     });
 
     // Generate and set OTP
@@ -167,13 +211,13 @@ router.post('/register', async (req, res) => {
     // Send OTP
     sendOtpEmail(user.email, otp);
 
-    // Respond with success message
     return res.status(201).json({ message: 'User registered successfully. An OTP has been sent to your email.' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // OTP verification endpoint
 router.post('/verify-otp', async (req, res) => {
@@ -203,6 +247,9 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
+
+
+
 //Update user details
 router.put('/profile', async (req, res) => {
   const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
@@ -213,13 +260,11 @@ router.put('/profile', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User not authenticated' });
     }
 
-    // Find the current user data
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Update fields
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.age = age || user.age;
@@ -228,13 +273,13 @@ router.put('/profile', async (req, res) => {
     user.email = email || user.email;
     user.role = role || user.role;
 
-    // If a new password is provided, hash it before saving
+    // Encrypt the password if it's provided
     if (password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      const { encryptedData, iv } = encrypt(password);
+      user.password = encryptedData;
+      user.iv = iv;
     }
 
-    // Save updated user data
     const updatedUser = await user.save();
 
     // Update session data after saving
@@ -252,6 +297,7 @@ router.put('/profile', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 
 
