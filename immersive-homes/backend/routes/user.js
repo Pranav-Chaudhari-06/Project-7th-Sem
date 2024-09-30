@@ -203,19 +203,48 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
-
-// Endpoint to update user profile
+//Update user details
 router.put('/profile', async (req, res) => {
-  const { firstName, lastName, email, phoneNumber } = req.body;
+  const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
+
   try {
     const userId = req.session.user.id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User not authenticated' });
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-      firstName,
-      lastName,
-      email,
-      phoneNumber
-    }, { new: true });
+    // Find the current user data
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Update fields
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.age = age || user.age;
+    user.gender = gender || user.gender;
+    user.phoneNumber = phoneNumber || user.phoneNumber;
+    user.email = email || user.email;
+    user.role = role || user.role;
+
+    // If a new password is provided, hash it before saving
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    // Save updated user data
+    const updatedUser = await user.save();
+
+    // Update session data after saving
+    req.session.user = {
+      id: updatedUser._id,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+      role: updatedUser.role
+    };
 
     res.json({ success: true, user: updatedUser });
   } catch (err) {
@@ -223,6 +252,7 @@ router.put('/profile', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 
 
