@@ -181,6 +181,7 @@ router.post('/logout', (req, res) => {
 // Registration endpoint
 router.post('/register', async (req, res) => {
   const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
+
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -193,7 +194,7 @@ router.post('/register', async (req, res) => {
     const user = new User({
       firstName,
       lastName,
-      age,
+      dateOfBirth: new Date(age), // Convert the date string to a Date object
       gender,
       phoneNumber,
       email,
@@ -217,6 +218,7 @@ router.post('/register', async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 // OTP verification endpoint

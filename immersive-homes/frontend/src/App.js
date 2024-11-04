@@ -6,16 +6,16 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Login from './Login';
-import Navbar from './Navbar';
-import Registration from './Registration';
-import Home from './Home';
-import Upload from './Upload';
-import Explore from './Explore';
-import Otp from './Otp';
-import Profile from './Profile';
-import ForgotPassword from './ForgotPassword';
-import ResetPassword from './ResetPassword';
+import Login from './components/User/Login';
+import Navbar from './components/Layouts/Navbar';
+import Registration from './components/User/Registration';
+import Home from './components/Pages/Home';
+import Upload from './components/Pages/Upload';
+import Explore from './components/Pages/Explore';
+import Otp from './components/User/Otp';
+import Profile from './components/User/Profile';
+import ForgotPassword from './components/User/ForgotPassword';
+import ResetPassword from './components/User/ResetPassword';
 
 function App() {
   return (

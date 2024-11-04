@@ -1,6 +1,6 @@
 import React from 'react';
-import PopularModelsPage from './PopularModelsPage';
-import Footer from './Footer';
+import PopularModelsPage from '../../PopularModelsPage';
+import Footer from '../Layouts/Footer';
 
 export default function Home() {
   return (
