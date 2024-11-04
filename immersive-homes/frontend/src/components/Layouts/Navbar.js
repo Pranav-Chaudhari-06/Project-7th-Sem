@@ -46,10 +46,10 @@ function Navbar() {
                         <div className="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                                 <li className="nav-item">
-                                    <Link className="nav-link text-bold active" aria-current="page" to="/">Home</Link>
+                                    <Link className="nav-link text-bold" aria-current="page" to="/">Explore</Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link text-bold" to="/explore">Explore</Link>
+                                    {/* <Link className="nav-link text-bold" to="/explore">Explore</Link> */}
                                 </li>
                                 <li className="nav-item">
                                     <Link className="nav-link text-bold" to="/upload">Upload</Link>
