@@ -16,6 +16,10 @@ import Otp from './components/User/Otp';
 import Profile from './components/User/Profile';
 import ForgotPassword from './components/User/ForgotPassword';
 import ResetPassword from './components/User/ResetPassword';
+import Dashboard from './components/Admin/Dashboard';
+import ModelRequest from './components/User/ModelRequest';
+import ModelUpload from './components/Admin/ModelUpload';
+import ViewRequests from './components/Admin/ViewRequest';
 
 function App() {
   return (
@@ -59,6 +63,22 @@ function App() {
           <Route 
             path="/reset-password/:token" 
             element={<ResetPassword />} 
+          />
+          <Route
+            path="/admin/dashboard"
+            element={<Dashboard />}
+          />
+          <Route
+            path="/upload/new"
+            element={<ModelRequest />}
+          />
+          <Route
+            path="/admin/uploadmodel"
+            element={<ModelUpload />}
+          />
+          <Route
+            path="/admin/viewrequest"
+            element={<ViewRequests />}
           />
           <Route
             path="*"

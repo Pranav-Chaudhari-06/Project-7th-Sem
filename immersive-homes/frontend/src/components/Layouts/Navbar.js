@@ -45,27 +45,46 @@ function Navbar() {
                         </button>
                         <div className="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                                <li className="nav-item">
-                                    <Link className="nav-link text-bold" aria-current="page" to="/">Explore</Link>
-                                </li>
-                                <li className="nav-item">
-                                    {/* <Link className="nav-link text-bold" to="/explore">Explore</Link> */}
-                                </li>
-                                <li className="nav-item">
-                                    <Link className="nav-link text-bold" to="/upload">Upload</Link>
-                                </li>
+                                {user?.role === 'Admin' ? (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link className="nav-link text-bold" to="/admin/dashboard">Dashboard</Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link className="nav-link text-bold" to="/admin/viewrequest">View Requests</Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link className="nav-link text-bold" to="/admin/uploadmodel">Upload Models</Link>
+                                        </li>
+                                    </>
+                                ) : (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link className="nav-link text-bold" to="/">Explore</Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link className="nav-link text-bold" to="/upload">Upload</Link>
+                                        </li>
+                                    </>
+                                )}
                             </ul>
                             <ul className="navbar-nav ms-auto">
                                 {user ? (
-                                    <li className="nav-item dropdown me-5">
-                                        <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {user.firstName}
-                                        </a>
-                                        <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
-                                            <li><Link className="dropdown-item" to="/profile">Profile</Link></li>
-                                            <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
-                                        </ul>
-                                    </li>
+                                    user.role === 'Admin' ? (
+                                        <li className="nav-item me-4">
+                                            <button className="nav-link text-bold" onClick={handleLogout}>Log out</button>
+                                        </li>
+                                    ) : (
+                                        <li className="nav-item dropdown me-5">
+                                            <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                {user.firstName}
+                                            </a>
+                                            <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                                                <li><Link className="dropdown-item" to="/profile">Profile</Link></li>
+                                                <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
+                                            </ul>
+                                        </li>
+                                    )
                                 ) : (
                                     <li className="nav-item me-4">
                                         <Link className="nav-link" to="/login">Login</Link>

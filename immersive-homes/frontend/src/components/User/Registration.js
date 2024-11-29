@@ -8,7 +8,7 @@ export default function Registration() {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        dob: '',  // Changed from `age` to `dob` to capture the date of birth
+        age: '',  // Age as number
         gender: '',
         phoneNumber: '',
         email: '',
@@ -16,24 +16,12 @@ export default function Registration() {
         confirmPassword: '',
         role: '',
     });
-    const [errors, setErrors] = useState({}); // Track validation errors
-
+    const [errors, setErrors] = useState({});
     const navigate = useNavigate();
 
-    const { firstName, lastName, dob, gender, phoneNumber, email, password, confirmPassword, role } = formData;
+    const { firstName, lastName, age, gender, phoneNumber, email, password, confirmPassword, role } = formData;
 
     const onChange = e => setFormData({ ...formData, [e.target.id]: e.target.value });
-
-    const calculateAge = (dob) => {
-        const birthDate = new Date(dob);
-        const today = new Date();
-        let cal_age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            cal_age--;
-        }
-        return cal_age;
-    };
 
     const validateForm = () => {
         const newErrors = {};
@@ -41,22 +29,21 @@ export default function Registration() {
         if (!firstName.trim()) newErrors.firstName = 'First name is required';
         // Last name validation
         if (!lastName.trim()) newErrors.lastName = 'Last name is required';
-        // Date of birth validation (minimum cal_age 18, maximum cal_age 100)
-        if (!dob) {
-            newErrors.dob = 'Date of birth is required';
-        } else {
-            const cal_age = calculateAge(dob);
-            if (cal_age < 18 || cal_age > 100) newErrors.dob = 'Age must be between 18 and 100';
+        // Age validation (minimum age 18, maximum age 100)
+        if (!age) {
+            newErrors.age = 'Age is required';
+        } else if (age < 18 || age > 100) {
+            newErrors.age = 'Age must be between 18 and 100';
         }
         // Gender validation
         if (!gender) newErrors.gender = 'Please select your gender';
-        // Phone number validation (basic format check)
+        // Phone number validation
         const phonePattern = /^[0-9]{10}$/;
         if (!phonePattern.test(phoneNumber)) newErrors.phoneNumber = 'Phone number must be 10 digits';
         // Email validation
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(email)) newErrors.email = 'Invalid email address';
-        // Password validation (minimum 6 characters)
+        // Password validation
         if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
         // Confirm password validation
         if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
@@ -64,30 +51,27 @@ export default function Registration() {
         if (!role) newErrors.role = 'Please select your role';
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0; // Return true if no errors
+        return Object.keys(newErrors).length === 0;
     };
 
     const nextStep = () => {
         if (step === 1) {
-            // Validate only Step 1 fields (Personal Info)
             const personalInfoErrors = {};
             if (!firstName.trim()) personalInfoErrors.firstName = 'First name is required';
             if (!lastName.trim()) personalInfoErrors.lastName = 'Last name is required';
-            if (!dob) {
-                personalInfoErrors.dob = 'Date of birth is required';
-            } else {
-                const cal_age = calculateAge(dob);
-                if (cal_age < 18 || cal_age > 100) personalInfoErrors.dob = 'Age must be between 18 and 100';
+            if (!age) {
+                personalInfoErrors.age = 'Age is required';
+            } else if (age < 18 || age > 100) {
+                personalInfoErrors.age = 'Age must be between 18 and 100';
             }
             if (!gender) personalInfoErrors.gender = 'Please select your gender';
 
             if (Object.keys(personalInfoErrors).length === 0) {
-                setStep(2); // Proceed to next step if no errors
+                setStep(2);
             } else {
-                setErrors(personalInfoErrors); // Set errors if validation fails
+                setErrors(personalInfoErrors);
             }
         } else if (step === 2) {
-            // Validate only Step 2 fields (Contact Info)
             const contactInfoErrors = {};
             const phonePattern = /^[0-9]{10}$/;
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -97,9 +81,9 @@ export default function Registration() {
             if (password !== confirmPassword) contactInfoErrors.confirmPassword = 'Passwords do not match';
 
             if (Object.keys(contactInfoErrors).length === 0) {
-                setStep(3); // Proceed to next step if no errors
+                setStep(3);
             } else {
-                setErrors(contactInfoErrors); // Set errors if validation fails
+                setErrors(contactInfoErrors);
             }
         }
     };
@@ -108,14 +92,10 @@ export default function Registration() {
 
     const onSubmit = async e => {
         e.preventDefault();
-        if (!validateForm()) return; // Ensure validation before submitting
-
-        // Calculate age from DOB before sending to backend
-        const cal_age = calculateAge(dob);
-        const finalData = { ...formData, age: cal_age }; // Add `age` to form data
+        if (!validateForm()) return;
 
         try {
-            const res = await axios.post('http://localhost:5000/api/users/register', finalData);
+            const res = await axios.post('http://localhost:5000/api/users/register', formData);
             console.log(res.data);
             alert('Registration successful! An OTP has been sent to your email.');
             navigate('/otp_verification', { state: { email } });
@@ -144,9 +124,9 @@ export default function Registration() {
                                 {errors.lastName && <div className="text-danger">{errors.lastName}</div>}
                             </div>
                             <div className="form-group mb-3">
-                                <label htmlFor="dob" className="form-label text-lg">Date of Birth</label>
-                                <input type="date" className="form-control" id="dob" value={dob} onChange={onChange} />
-                                {errors.dob && <div className="text-danger">{errors.dob}</div>}
+                                <label htmlFor="age" className="form-label text-lg">Age</label>
+                                <input type="number" className="form-control" id="age" placeholder="Enter your age" value={age} onChange={onChange} />
+                                {errors.age && <div className="text-danger">{errors.age}</div>}
                             </div>
                             <div className="form-group mb-3">
                                 <label htmlFor="gender" className="form-label text-lg">Gender</label>
@@ -194,22 +174,20 @@ export default function Registration() {
                         <div>
                             <h4>Role Selection</h4>
                             <div className="form-group mb-3">
-                                <label htmlFor="role" className="form-label text-lg">Role</label>
+                                <label htmlFor="role" className="form-label text-lg">Select Role</label>
                                 <select className="form-control" id="role" value={role} onChange={onChange}>
                                     <option value="">Select role</option>
-                                    <option value="architect">Architect</option>
-                                    {/* <option value="">Customer</option> */}
+                                    <option value="Architect">Architect</option>
+                                    {/* <option value="admin">Admin</option> */}
                                 </select>
                                 {errors.role && <div className="text-danger">{errors.role}</div>}
                             </div>
                             <button type="button" className="btn btn-custom w-100 mb-3" onClick={prevStep}>Back</button>
-                            <button type="submit" className="btn btn-custom w-100">Register</button>
+                            <button type="submit" className="btn btn-custom w-100 mb-3">Submit</button>
                         </div>
                     )}
                 </form>
-                <div className="text-center">
-                    Already have an account? <Link to="/login">Login</Link>
-                </div>
+                <p className="text-center mt-3">Already have an account? <Link to="/login">Login</Link></p>
             </div>
         </div>
     );

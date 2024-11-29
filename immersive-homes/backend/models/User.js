@@ -3,12 +3,11 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  dateOfBirth: { type: Date, required: true }, // Change age to dateOfBirth
+  age: { type: Number, required: true }, // Changed from dateOfBirth to age
   gender: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  iv: { type: String }, // Field to store the initialization vector (IV) for encryption
   role: { type: String, required: true },
   otp: { type: String }, // OTP field
   resetPasswordToken: { type: String }, // Field to store the reset token

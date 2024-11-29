@@ -11,7 +11,7 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
-    age: '',
+    age: '',  // Use age instead of dob
     gender: '',
     phoneNumber: '',
     email: '',
@@ -28,11 +28,11 @@ const Profile = () => {
         setEditForm({
           firstName: response.data.user.firstName,
           lastName: response.data.user.lastName,
-          age: response.data.user.age,
+          age: response.data.user.age, // Fetch age
           gender: response.data.user.gender,
           phoneNumber: response.data.user.phoneNumber,
           email: response.data.user.email,
-          password: response.data.user.password, // Do not display the hashed password
+          password: '', // Do not display the hashed password
           role: response.data.user.role
         });
       } catch (error) {
@@ -97,23 +97,13 @@ const Profile = () => {
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex flex-column align-items-center text-center">
-                    {/* <img
-                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtbEsykx-0fhTred6UwHDYtMFd2UgTJCG4gaklT1dx4suRO4_n5LJr4Gg28kquSX5fpNo&usqp=CAU"
-                      alt="Admin"
-                      className="rounded-circle p-1 bg-warning"
-                      width="110"
-                    /> */}
                     <div className="mt-3">
                       <h4>{user.firstName} {user.lastName}</h4>
                       <p className="text-secondary mb-1">{user.phoneNumber}</p>
-                      {/* <p className="text-muted font-size-sm">Delhi, NCR</p> */}
                     </div>
                   </div>
                   <div className="list-group list-group-flush text-center mt-4">
                     <button className={`list-group-item list-group-item-action border-0 ${activeSection === 'profile' ? 'active' : ''}`} onClick={() => setActiveSection('profile')}>Profile Information</button>
-                    {/* <button className={`list-group-item list-group-item-action border-0 ${activeSection === 'orders' ? 'active' : ''}`} onClick={() => setActiveSection('orders')}>Orders</button>
-                    <button className={`list-group-item list-group-item-action border-0 ${activeSection === 'addressBook' ? 'active' : ''}`} onClick={() => setActiveSection('addressBook')}>Address Book</button>
-                    <button className="list-group-item list-group-item-action border-0">Logout</button> */}
                   </div>
                 </div>
               </div>
@@ -231,6 +221,7 @@ const ProfileDetails = ({ user, isEditing, editForm, handleInputChange, handleSa
         <>
           <h5>Profile Information</h5>
           <p><strong>Name:</strong> {user.firstName} {user.lastName}</p>
+          <p><strong>Age:</strong> {user.age} years</p>
           <p><strong>Email Address:</strong> {user.email}</p>
           <p><strong>Contact:</strong> {user.phoneNumber}</p>
           <p><strong>Gender:</strong> {user.gender}</p>

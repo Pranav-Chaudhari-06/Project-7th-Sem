@@ -1,0 +1,84 @@
+/* src/components/Dashboard.css */
+
+.dashboard-overview {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    flex: 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card h2 {
+    font-size: 1.5em;
+    margin: 0;
+    color: #333;
+  }
+  
+  .card p {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .dashboard-section {
+    margin-top: 30px;
+  }
+  
+  .dashboard-section h2 {
+    font-size: 1.6em;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+  }
+  
+  .table {
+    margin-top: 10px;
+    overflow-x: auto;
+  }
+  
+  .table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .table td {
+    color: #555;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  ul li {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    font-size: 1em;
+    color: #555;
+  }
+  
+  ul li:last-child {
+    border-bottom: none;
+  }
+  

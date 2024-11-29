@@ -2,39 +2,33 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const multer = require('multer');
 const User = require('../models/User');
+const ModelRequest = require('../models/ModelRequest');
+
 const router = express.Router();
 
-// Encryption and Decryption functions
-const algorithm = 'aes-256-cbc';
-const encryptionKey = crypto.randomBytes(32); // Store this key securely, such as in an environment variable
-const iv = crypto.randomBytes(16);
+// Hardcoded sensitive data (replace these with your actual values)
+const EMAIL_USER = '21bmiit096@gmail.com';
+const EMAIL_PASS = 'thgccrbktampmmjb';
+const FRONTEND_URL = 'http://localhost:3000';
 
-function encrypt(text) {
-  const cipher = crypto.createCipheriv(algorithm, Buffer.from(encryptionKey), iv);
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
-  return {
-    iv: iv.toString('hex'),
-    encryptedData: encrypted.toString('hex')
-  };
-}
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+});
+const fileFilter = (req, file, cb) => {
+  const validMimeTypes = ['application/pdf', 'application/vnd.dwg'];
+  if (validMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only .pdf and .cad files are allowed'), false);
+  }
+};
+const upload = multer({ storage, fileFilter });
 
-
-function decrypt(encryptedText, iv) {
-  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(encryptionKey), Buffer.from(iv, 'hex'));
-  let decrypted = decipher.update(Buffer.from(encryptedText, 'hex'));
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-  return decrypted.toString();
-}
-
-
-
-
-
-
-
-// Login endpoint
+// --- Existing User Routes --- //
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -43,142 +37,54 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Decrypt the stored password
-    const decryptedPassword = decrypt(user.password, user.iv);
-
-    if (password !== decryptedPassword) {
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Set session data
-    req.session.user = {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      age: user.age,
-      gender: user.gender,
-      phoneNumber: user.phoneNumber,
-      email: user.email,
-      password: decryptedPassword, // Store decrypted password in session
-      role: user.role
-    };
+    // Regenerate session ID to prevent fixation attacks
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Session error' });
 
-    res.json({ success: true, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
+      // Set session data
+      req.session.user = {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+      };
+
+      res.json({
+        success: true,
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-
-
-
-router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'User not found' });
-    }
-
-    // Generate a reset token and its expiration time
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    const resetTokenExpires = Date.now() + 3600000; // 1 hour from now
-
-    // Update the user with the reset token and its expiration
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = resetTokenExpires;
-    await user.save();  
-
-    // Send the reset link via email
-    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
-    sendResetEmail(user.email, resetUrl);
-
-    res.json({ message: 'Password reset link has been sent to your email' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Endpoint to handle password reset
-router.post('/reset-password/:token', async (req, res) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
-
-  if (!newPassword) {
-    return res.status(400).json({ message: 'New password is required' });
-  }
-
-  try {
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token' });
-    }
-
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // Update the user with the new password and clear the reset token fields
-    user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
-
-    res.json({ message: 'Password has been reset successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-
-function sendResetEmail(email, resetUrl) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: '21bmiit096@gmail.com',
-      pass: 'thgccrbktampmmjb',
-    },
-  });
-
-  const mailOptions = {
-    from: '21bmiit096@gmail.com',
-    to: email,
-    subject: 'Password Reset',
-    text: `You requested a password reset. Click the following link to reset your password: ${resetUrl}`
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
-}
-
-
-
-
-
-// Logout endpoint
+// Logout Route
 router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
+  req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ success: false, message: 'Failed to log out' });
     }
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
+    res.clearCookie('connect.sid'); // Clear session cookie
+    res.json({ success: true, message: 'Logged out successfully' });
   });
 });
 
-// Registration endpoint
+// Register Route
 router.post('/register', async (req, res) => {
   const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
 
@@ -188,18 +94,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Encrypt the password
-    const { encryptedData, iv } = encrypt(password);
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = new User({
       firstName,
       lastName,
-      dateOfBirth: new Date(age), // Convert the date string to a Date object
+      age,
       gender,
       phoneNumber,
       email,
-      password: encryptedData, // Store the encrypted password
-      iv: iv,  // Store the initialization vector (iv)
+      password: hashedPassword, // Store the hashed password
       role
     });
 
@@ -219,9 +125,144 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Forgot Password Route
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
 
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = Date.now() + 3600000; // 1 hour
 
-// OTP verification endpoint
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpires;
+    await user.save();
+
+    const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
+    sendResetEmail(user.email, resetUrl);
+
+    res.json({ message: 'Password reset link sent to your email' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset Password Route
+router.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Profile Update Route
+router.put('/profile', async (req, res) => {
+  const { firstName, lastName, email, password, role } = req.body;
+  try {
+    const userId = req.session.user.id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User not authenticated' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.role = role || user.role;
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    const updatedUser = await user.save();
+
+    // Update session data
+    req.session.user = {
+      id: updatedUser._id,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    };
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Session Check Route
+router.get('/session', (req, res) => {
+  if (req.session.user) {
+    res.json({ user: req.session.user });
+  } else {
+    res.json({ user: null });
+  }
+});
+
+// Fetch Architects Route
+router.get('/architects', async (req, res) => {
+  try {
+    const architects = await User.find({ role: 'Architect' });
+    res.status(200).json({ success: true, users: architects });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Delete User by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Update User by ID
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
   try {
@@ -237,6 +278,7 @@ router.post('/verify-otp', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        age: user.age,
       };
 
       res.json({ success: true, message: 'OTP verified and user registered' });
@@ -249,71 +291,117 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
+// --- Integrated Model Request Routes --- //
 
-
-
-//Update user details
-router.put('/profile', async (req, res) => {
-  const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
-
+// Model request submission
+router.post('/request', upload.single('file'), async (req, res) => {
   try {
-    const userId = req.session.user.id;
-    if (!userId) {
-      return res.status(400).json({ success: false, message: 'User not authenticated' });
+    // Ensure the user is logged in and is an Architect
+    if (!req.session.user || req.session.user.role !== 'Architect') {
+      return res.status(403).json({ message: 'Access denied: Architects only' });
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    const { modelType, description, urgency } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'File is required' });
     }
 
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.age = age || user.age;
-    user.gender = gender || user.gender;
-    user.phoneNumber = phoneNumber || user.phoneNumber;
-    user.email = email || user.email;
-    user.role = role || user.role;
+    const newRequest = new ModelRequest({
+      architectId: req.session.user.id,
+      modelType,
+      description,
+      urgency,
+      fileUrl: req.file.path,
+    });
 
-    // Encrypt the password if it's provided
-    if (password) {
-      const { encryptedData, iv } = encrypt(password);
-      user.password = encryptedData;
-      user.iv = iv;
-    }
-
-    const updatedUser = await user.save();
-
-    // Update session data after saving
-    req.session.user = {
-      id: updatedUser._id,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      email: updatedUser.email,
-      role: updatedUser.role
-    };
-
-    res.json({ success: true, user: updatedUser });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    await newRequest.save();
+    res.status(201).json({ message: 'Model request submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting model request:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
+// Fetch all model requests for Admins
+router.get('/all-requests', async (req, res) => {
+  try {
+    console.log('Session User:', req.session.user);
+    // Ensure the user is logged in and is an Admin
+    if (!req.session.user || req.session.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Access denied: Admins only' });
+    }
 
-
-
-
-
-// Fetch session data
-router.get('/session', (req, res) => {
-  if (req.session.user) {
-    res.json({ user: req.session.user });
-  } else {
-    res.json({ user: null });
+    const requests = await ModelRequest.find().populate('architectId', 'firstName lastName email');
+    res.status(200).json({ success: true, requests });
+  } catch (error) {
+    console.error('Error fetching all model requests:', error);
+    res.status(500).json({ message: 'Failed to fetch model requests' });
   }
 });
 
+// Fetch model requests for the logged-in Architect
+router.get('/requests', async (req, res) => {
+  try {
+    // Ensure the user is logged in and is an Architect
+    if (!req.session.user || req.session.user.role !== 'Architect') {
+      return res.status(403).json({ message: 'Access denied: Architects only' });
+    }
+
+    const architectId = req.session.user.id;
+    const requests = await ModelRequest.find({ architectId });
+    res.status(200).json({ success: true, requests });
+  } catch (error) {
+    console.error('Error fetching model requests:', error);
+    res.status(500).json({ message: 'Failed to fetch model requests' });
+  }
+});
+
+// Update model request status
+router.put('/update-status/:id', async (req, res) => {
+  try {
+    // Ensure the user is logged in and is an Admin
+    if (!req.session.user || req.session.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Access denied: Admins only' });
+    }
+
+    const { status } = req.body;
+    const requestId = req.params.id;
+
+    const updatedRequest = await ModelRequest.findByIdAndUpdate(
+      requestId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Model request not found' });
+    }
+
+    res.status(200).json({ message: 'Model request status updated successfully', request: updatedRequest });
+  } catch (error) {
+    console.error('Error updating model request status:', error);
+    res.status(500).json({ message: 'Failed to update model request status' });
+  }
+});
+
+// View all model requests by the logged-in Architect
+router.get('/my-requests', async (req, res) => {
+  try {
+    // Ensure the user is logged in and is an Architect
+    if (!req.session.user || req.session.user.role !== 'Architect') {
+      return res.status(403).json({ message: 'Access denied: Architects only' });
+    }
+
+    const requests = await ModelRequest.find({ architectId: req.session.user.id });
+    res.status(200).json({ success: true, requests });
+  } catch (error) {
+    console.error('Error fetching model requests:', error);
+    res.status(500).json({ message: 'Failed to fetch model requests' });
+  }
+});
+
+// --- Helper Functions --- //
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -322,24 +410,20 @@ function sendOtpEmail(email, otp) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: '21bmiit096@gmail.com',
-      pass: 'thgccrbktampmmjb',
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
     },
   });
 
   const mailOptions = {
-    from: '21bmiit096@gmail.com',
+    from: EMAIL_USER,
     to: email,
     subject: 'Your OTP Code',
-    text: `Your OTP code is ${otp}`,
+    text: `Your OTP code is: ${otp}`,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
+  transporter.sendMail(mailOptions, (err) => {
+    if (err) console.error('Error sending email:', err);
   });
 }
 
