@@ -1,4 +1,3 @@
-// src/components/AdminRequests.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Container, Table, Button, Alert, Spinner } from 'react-bootstrap';
@@ -10,8 +9,9 @@ const ViewRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/users/all-requests', {withCredentials: true, });
+        const response = await axios.get('http://localhost:5000/api/users/all-requests', {
+          withCredentials: true,
+        });
         setRequests(response.data.requests);
       } catch (error) {
         console.error('Error fetching model requests:', error);
@@ -42,6 +42,25 @@ const ViewRequests = () => {
     }
   };
 
+  const markAsCompleted = async (requestId) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/users/update-status/${requestId}`,
+        { status: 'Completed' },
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        setRequests((prevRequests) =>
+          prevRequests.map((req) =>
+            req._id === requestId ? { ...req, status: 'Completed' } : req
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating request status:', error);
+    }
+  };
+
   return (
     <div className="mt-5">
       <h2 className="text-center mb-4">Architect Model Requests</h2>
@@ -59,7 +78,6 @@ const ViewRequests = () => {
           <Table bordered hover className="table-striped">
             <thead className="table-dark">
               <tr>
-                <th>Request ID</th>
                 <th>Model Type</th>
                 <th>Description</th>
                 <th>Urgency</th>
@@ -70,11 +88,14 @@ const ViewRequests = () => {
             <tbody>
               {requests.map((request) => (
                 <tr key={request._id}>
-                  <td>{request._id}</td>
                   <td>{request.modelType}</td>
                   <td>{request.description}</td>
                   <td>{request.urgency}</td>
-                  <td className={request.status === 'Completed' ? 'text-success' : 'text-warning'}>
+                  <td
+                    className={
+                      request.status === 'Completed' ? 'text-success' : 'text-warning'
+                    }
+                  >
                     {request.status}
                   </td>
                   <td>
@@ -83,11 +104,21 @@ const ViewRequests = () => {
                         variant="outline-primary"
                         size="sm"
                         onClick={() => downloadFile(request.fileUrl)}
+                        className="me-2"
                       >
                         Download File
                       </Button>
                     ) : (
-                      <span className="text-muted">No File</span>
+                      <span className="text-muted me-2">No File</span>
+                    )}
+                    {request.status !== 'Completed' && (
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={() => markAsCompleted(request._id)}
+                      >
+                        Completed
+                      </Button>
                     )}
                   </td>
                 </tr>

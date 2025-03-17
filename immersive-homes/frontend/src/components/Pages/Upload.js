@@ -26,7 +26,7 @@ const Upload = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="mx-5 mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Your Model Requests</h2>
         <button className="btn btn-primary" onClick={handleNewRequest}>

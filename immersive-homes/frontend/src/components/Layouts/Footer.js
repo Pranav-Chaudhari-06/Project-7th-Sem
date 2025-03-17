@@ -13,18 +13,8 @@ function Footer() {
           </Col>
 
           <Col lg={3} md={6} className="mb-4 mb-md-0">
-            <h5 className="text-uppercase">Links</h5>
-            <ul className="list-unstyled mb-0">
-              <li>
-                <a href="#!" className="text-dark">Help Center</a>
-              </li>
-              <li>
-                <a href="#!" className="text-dark">Contact Us</a>
-              </li>
-              <li>
-                <a href="#!" className="text-dark">About</a>
-              </li>
-            </ul>
+            <h5 className="text-uppercase">Contact Us</h5>
+            <p className="text-dark">contact@immersivehomes.com</p>
           </Col>
 
           <Col lg={3} md={6} className="mb-4 mb-md-0">

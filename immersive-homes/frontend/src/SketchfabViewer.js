@@ -2,20 +2,55 @@ import React, { useEffect } from 'react';
 
 function SketchfabViewer({ modelId, title }) {
   useEffect(() => {
-    const iframe = document.getElementById(`sketchfab-${modelId}`);
-    const client = new window.Sketchfab('1.0.0', iframe);
+    let script;
+    let viewerClient;
+    let isMounted = true;
 
-    client.init(modelId, {
-      success: function(api) {
-        api.start();
-        api.addEventListener('viewerready', function() {
-          console.log('Viewer is ready');
-        });
-      },
-      error: function() {
-        console.error('Error initializing Sketchfab viewer');
-      },
-    });
+    const initializeViewer = () => {
+      const iframe = document.getElementById(`sketchfab-${modelId}`);
+      if (!iframe) return;
+
+      viewerClient = new window.Sketchfab('1.12.1', iframe);
+
+      viewerClient.init(modelId, {
+        success: (api) => {
+          if (!isMounted) return;
+          api.start();
+          api.addEventListener('viewerready', () => {
+            console.log('Viewer is ready');
+          });
+        },
+        error: () => {
+          console.error('Error initializing Sketchfab viewer');
+        },
+      });
+    };
+
+    if (typeof window.Sketchfab === 'function') {
+      initializeViewer();
+    } else {
+      script = document.createElement('script');
+      script.src = 'https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js';
+      script.async = true;
+      script.onload = () => {
+        if (isMounted) initializeViewer();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Sketchfab SDK');
+      };
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      isMounted = false;
+      // Cleanup iframe and viewer client
+      if (viewerClient) {
+        viewerClient.destroy();
+      }
+      if (script) {
+        document.head.removeChild(script);
+      }
+    };
   }, [modelId]);
 
   return (

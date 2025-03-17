@@ -53,6 +53,9 @@ router.post('/login', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        age: user.age,
+        gender: user.gender,
+        phoneNumber:user.phoneNumber,
         role: user.role,
       };
 
@@ -60,10 +63,13 @@ router.post('/login', async (req, res) => {
         success: true,
         user: {
           id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        age: user.age,
+        gender: user.gender,
+        phoneNumber:user.phoneNumber,
+        role: user.role,
         },
       });
     });
@@ -181,7 +187,7 @@ router.post('/reset-password/:token', async (req, res) => {
 
 // Profile Update Route
 router.put('/profile', async (req, res) => {
-  const { firstName, lastName, email, password, role } = req.body;
+  const { firstName, lastName, age, gender, phoneNumber, email, password, role } = req.body;
   try {
     const userId = req.session.user.id;
     if (!userId) {
@@ -195,6 +201,9 @@ router.put('/profile', async (req, res) => {
 
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
+    user.age = age || user.age;
+    user.gender = gender || user.gender;
+    user.phoneNumber = phoneNumber || user.phoneNumber;
     user.email = email || user.email;
     user.role = role || user.role;
 
@@ -210,6 +219,9 @@ router.put('/profile', async (req, res) => {
       id: updatedUser._id,
       firstName: updatedUser.firstName,
       lastName: updatedUser.lastName,
+      age: updatedUser.age,
+      gender: updatedUser.gender,
+      phoneNumber: updatedUser.phoneNumber,
       email: updatedUser.email,
       role: updatedUser.role,
     };

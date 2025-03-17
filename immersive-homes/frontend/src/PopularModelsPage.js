@@ -17,7 +17,8 @@ const modelData = [
 function PopularModelsPage() {
   return (
     <div className="mx-5">
-      <h2 className="text-center mb-4">Popular House Models</h2>
+      <h2 className="mb-4">Popular House Models</h2>
+      <hr></hr>
       <Row>
         {modelData.map((model) => (
           <Col key={model.id} md={4} className="mb-4">
