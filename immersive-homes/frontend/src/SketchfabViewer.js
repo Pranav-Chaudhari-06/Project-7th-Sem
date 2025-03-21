@@ -43,12 +43,12 @@ function SketchfabViewer({ modelId, title }) {
 
     return () => {
       isMounted = false;
-      // Cleanup iframe and viewer client
-      if (viewerClient) {
-        viewerClient.destroy();
-      }
-      if (script) {
-        document.head.removeChild(script);
+      // Nullify viewerClient instead of removing iframe
+      viewerClient = null;
+
+      // Only remove script if it was added dynamically
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
       }
     };
   }, [modelId]);
